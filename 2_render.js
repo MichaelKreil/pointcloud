@@ -19,7 +19,7 @@ var ax = 0.15;
 var ay = 0;
 var zoom = 10*aa;
 var perspective = 300;
-var maxFrames = 100;
+var maxFrames = 10;
 
 var frame = 0;
 
