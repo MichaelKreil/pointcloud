@@ -1,17 +1,16 @@
 var fs = require('fs');
-var ffmpeg = require('./lib/ffmpeg');
+var gm = require('gm');
 
-var aa = 2; // Antialiasing
+var aa = 2;
 var width = 1920;
 var height = 1080;
 var width_aa = width*aa;
 var height_aa = height*aa;
 
 
-var buf = fs.readFileSync('./temp/points.bin');
+var buf = fs.readFileSync('points.bin');
 var imgBuf = new Buffer(width_aa*height_aa*3);
 var zBuf = new Buffer(width_aa*height_aa*4);
-var frameBuf = new Buffer(width*height*3);
 
 var n = buf.length/15;
 
@@ -19,23 +18,15 @@ var ax = 0.15;
 var ay = 0;
 var zoom = 10*aa;
 var perspective = 300;
-var maxFrames = 100;
 
 var frame = 0;
-
-var video = ffmpeg('./video/test.mp4');
-
 step();
 
 function step() {
-	ay = frame*2*Math.PI/maxFrames + 1.8;
+	ay = frame*Math.PI/500 + 1.8;
 	drawFrame(function () {
 		frame++;
-		if (frame < maxFrames) {
-			process.nextTick(step);
-		} else {
-			video.close();
-		}
+		step()
 	});	
 }
 
@@ -91,27 +82,18 @@ function drawFrame(cb) {
 		imgBuf.writeUInt8(b, offset*3+2);
 	}
 
-	var faa = aa*aa;
-	for (var y = 0; y < height; y++) {
-		for (var x = 0; x < width; x++) {
-			var r = 0, g = 0, b = 0;
+	var gmImage = gm(imgBuf);
 
-			for (var ya = 0; ya < aa; ya++) {
-				for (var xa = 0; xa < aa; xa++) {
-					var i = ((y*aa+ya)*width_aa + (x*aa+xa))*3;
-					r += imgBuf.readUInt8(i+0);
-					g += imgBuf.readUInt8(i+1);
-					b += imgBuf.readUInt8(i+2);
-				}
-			}
-
-			var fi = (y*width+x)*3;
-			frameBuf.writeUInt8(Math.round(r/faa), fi+0);
-			frameBuf.writeUInt8(Math.round(g/faa), fi+1);
-			frameBuf.writeUInt8(Math.round(b/faa), fi+2);
-		}
-	}
-
-	video.addFrame(frameBuf, cb)
+	gmImage._sourceFormatters.push(function (a) { a[0] = 'RGB:-';  });
+	gmImage.options({imageMagick: true});
+	gmImage.in('-size');
+	gmImage.in(width_aa+'x'+height_aa);
+	gmImage.in('-depth');
+	gmImage.in('8');
+	gmImage.resize(width, height);
+	gmImage.write('frames/frame'+frame+'.png', function (err) {
+		if (err) throw err;
+		cb();
+	});
 }
 

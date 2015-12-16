@@ -2,4 +2,6 @@
 *.bin
 *.txt
 *.7z
+*.log
+*.mp4
 node_modules/
