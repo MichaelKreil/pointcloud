@@ -41,7 +41,7 @@ function step() {
 
 
 function drawFrame(cb) {
-	console.log('draw '+frame);
+	console.log('frame '+frame);
 
 	zBuf.fill(0);
 	imgBuf.fill(0);
