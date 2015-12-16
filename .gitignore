@@ -1,0 +1,5 @@
+*.mkv
+*.bin
+*.txt
+*.7z
+node_modules/
